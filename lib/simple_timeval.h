@@ -25,6 +25,15 @@
 extern "C" {
 #endif
 
+struct ds;
+struct pollfd;
+struct timespec;
+struct timeval;
+
+int time_poll(struct pollfd *, int, HANDLE *handles OVS_UNUSED, long long int, int *);
+void timewarp_run(void);
+long long int timespec_to_msec(const struct timespec *ts);
+void xclock_gettime(clock_t id, struct timespec *ts);
 long long int time_msec(void);
 
 #ifdef  __cplusplus

@@ -24,7 +24,7 @@
 #include "entropy.h"
 #include "hash.h"
 #include "ovs-thread.h"
-#include "timeval.h"
+#include "simple_timeval.h"
 #include "util.h"
 
 /* This is the 32-bit PRNG recommended in G. Marsaglia, "Xorshift RNGs",

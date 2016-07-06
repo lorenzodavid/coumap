@@ -27,7 +27,7 @@
 #include "ovs-thread.h"
 #include "seq.h"
 #include "socket-util.h"
-#include "timeval.h"
+#include "simple_timeval.h"
 #include "hmap.h"
 #include "hash.h"
 

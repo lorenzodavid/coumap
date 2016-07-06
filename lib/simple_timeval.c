@@ -15,7 +15,7 @@
  */
 
 #include "config.h"
-#include "timeval.h"
+#include "simple_timeval.h"
 #include <errno.h>
 #include <poll.h>
 #include <pthread.h>
