@@ -37,7 +37,6 @@
 #include "packets.h"
 #include "poll-loop.h"
 #include "util.h"
-#include "openvswitch/vlog.h"
 #ifdef __linux__
 #include <linux/if_packet.h>
 #endif
@@ -45,8 +44,6 @@
 #include "netlink-protocol.h"
 #include "netlink-socket.h"
 #endif
-
-VLOG_DEFINE_THIS_MODULE(socket_util);
 
 /* Parses string 's', which must be an IP address.  Stores the IP address into
  * '*ip'.  Returns true if successful, otherwise false. */
@@ -79,18 +76,18 @@ set_nonblocking(int fd)
         if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) != -1) {
             return 0;
         } else {
-            VLOG_ERR("fcntl(F_SETFL) failed: %s", ovs_strerror(errno));
+            fprintf(stderr, "fcntl(F_SETFL) failed: %s", ovs_strerror(errno));
             return errno;
         }
     } else {
-        VLOG_ERR("fcntl(F_GETFL) failed: %s", ovs_strerror(errno));
+        fprintf(stderr, "fcntl(F_GETFL) failed: %s", ovs_strerror(errno));
         return errno;
     }
 #else
     unsigned long arg = 1;
     if (ioctlsocket(fd, FIONBIO, &arg)) {
         int error = sock_errno();
-        VLOG_ERR("set_nonblocking failed: %s", sock_strerror(error));
+        fprintf(stderr, "set_nonblocking failed: %s", sock_strerror(error));
         return error;
     }
     return 0;
@@ -114,7 +111,7 @@ setsockopt_tcp_nodelay(int fd)
     retval = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof on);
     if (retval) {
         retval = sock_errno();
-        VLOG_ERR("setsockopt(TCP_NODELAY): %s", sock_strerror(retval));
+        fprintf(stderr, "setsockopt(TCP_NODELAY): %s", sock_strerror(retval));
     }
 }
 
@@ -169,8 +166,7 @@ int
 lookup_ip(const char *host_name, struct in_addr *addr)
 {
     if (!ip_parse(host_name, &addr->s_addr)) {
-        static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(1, 5);
-        VLOG_ERR_RL(&rl, "\"%s\" is not a valid IP address", host_name);
+        fprintf(stderr, "\"%s\" is not a valid IP address", host_name);
         return ENOENT;
     }
     return 0;
@@ -183,8 +179,7 @@ int
 lookup_ipv6(const char *host_name, struct in6_addr *addr)
 {
     if (!ipv6_parse(host_name, addr)) {
-        static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(1, 5);
-        VLOG_ERR_RL(&rl, "\"%s\" is not a valid IPv6 address", host_name);
+        fprintf(stderr, "\"%s\" is not a valid IPv6 address", host_name);
         return ENOENT;
     }
     return 0;
@@ -258,7 +253,6 @@ lookup_hostname(const char *host_name, struct in_addr *addr)
 int
 check_connection_completion(int fd)
 {
-    static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(5, 10);
     struct pollfd pfd;
     int retval;
 
@@ -278,13 +272,13 @@ check_connection_completion(int fd)
             if (n < 0) {
                 return sock_errno();
             } else {
-                VLOG_ERR_RL(&rl, "poll return POLLERR but send succeeded");
+                fprintf(stderr, "poll return POLLERR but send succeeded");
                 return EPROTO;
             }
         }
         return 0;
     } else if (retval < 0) {
-        VLOG_ERR_RL(&rl, "poll: %s", sock_strerror(sock_errno()));
+        fprintf(stderr, "poll: %s", sock_strerror(sock_errno()));
         return errno;
     } else {
         return EAGAIN;
@@ -375,7 +369,7 @@ parse_sockaddr_components(struct sockaddr_storage *ss,
 
     if (port_s && port_s[0]) {
         if (!str_to_int(port_s, 10, &port) || port < 0 || port > 65535) {
-            VLOG_ERR("%s: bad port number \"%s\"", s, port_s);
+            fprintf(stderr, "%s: bad port number \"%s\"", s, port_s);
             goto exit;
         }
     } else {
@@ -390,14 +384,14 @@ parse_sockaddr_components(struct sockaddr_storage *ss,
         sin6->sin6_family = AF_INET6;
         sin6->sin6_port = htons(port);
         if (!ipv6_parse(host_s, &sin6->sin6_addr)) {
-            VLOG_ERR("%s: bad IPv6 address \"%s\"", s, host_s);
+            fprintf(stderr, "%s: bad IPv6 address \"%s\"", s, host_s);
             goto exit;
         }
     } else {
         sin->sin_family = AF_INET;
         sin->sin_port = htons(port);
         if (!ip_parse(host_s, &sin->sin_addr.s_addr)) {
-            VLOG_ERR("%s: bad IPv4 address \"%s\"", s, host_s);
+            fprintf(stderr, "%s: bad IPv4 address \"%s\"", s, host_s);
             goto exit;
         }
     }
@@ -430,10 +424,10 @@ inet_parse_active(const char *target_, uint16_t default_port,
     host = parse_bracketed_token(&p);
     port = parse_bracketed_token(&p);
     if (!host) {
-        VLOG_ERR("%s: host must be specified", target_);
+        fprintf(stderr, "%s: host must be specified", target_);
         ok = false;
     } else if (!port && !default_port) {
-        VLOG_ERR("%s: port must be specified", target_);
+        fprintf(stderr, "%s: port must be specified", target_);
         ok = false;
     } else {
         ok = parse_sockaddr_components(ss, host, port, default_port, target_);
@@ -482,7 +476,7 @@ inet_open_active(int style, const char *target, uint16_t default_port,
     fd = socket(ss.ss_family, style, 0);
     if (fd < 0) {
         error = sock_errno();
-        VLOG_ERR("%s: socket: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: socket: %s", target, sock_strerror(error));
         goto exit;
     }
     error = set_nonblocking(fd);
@@ -495,7 +489,7 @@ inet_open_active(int style, const char *target, uint16_t default_port,
      * connect(), the handshake SYN frames will be sent with a TOS of 0. */
     error = set_dscp(fd, ss.ss_family, dscp);
     if (error) {
-        VLOG_ERR("%s: set_dscp: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: set_dscp: %s", target, sock_strerror(error));
         goto exit;
     }
 
@@ -557,7 +551,7 @@ inet_parse_passive(const char *target_, int default_port,
     port = parse_bracketed_token(&p);
     host = parse_bracketed_token(&p);
     if (!port && default_port < 0) {
-        VLOG_ERR("%s: port must be specified", target_);
+        fprintf(stderr, "%s: port must be specified", target_);
         ok = false;
     } else {
         ok = parse_sockaddr_components(ss, host ? host : "0.0.0.0",
@@ -609,7 +603,7 @@ inet_open_passive(int style, const char *target, int default_port,
     fd = socket(ss.ss_family, style, 0);
     if (fd < 0) {
         error = sock_errno();
-        VLOG_ERR("%s: socket: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: socket: %s", target, sock_strerror(error));
         return -error;
     }
     error = set_nonblocking(fd);
@@ -619,7 +613,7 @@ inet_open_passive(int style, const char *target, int default_port,
     if (style == SOCK_STREAM
         && setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) < 0) {
         error = sock_errno();
-        VLOG_ERR("%s: setsockopt(SO_REUSEADDR): %s",
+        fprintf(stderr, "%s: setsockopt(SO_REUSEADDR): %s",
                  target, sock_strerror(error));
         goto error;
     }
@@ -627,7 +621,7 @@ inet_open_passive(int style, const char *target, int default_port,
     /* Bind. */
     if (bind(fd, (struct sockaddr *) &ss, ss_length(&ss)) < 0) {
         error = sock_errno();
-        VLOG_ERR("%s: bind: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: bind: %s", target, sock_strerror(error));
         goto error;
     }
 
@@ -636,14 +630,14 @@ inet_open_passive(int style, const char *target, int default_port,
      * connect(), the handshake SYN frames will be sent with a TOS of 0. */
     error = set_dscp(fd, ss.ss_family, dscp);
     if (error) {
-        VLOG_ERR("%s: set_dscp: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: set_dscp: %s", target, sock_strerror(error));
         goto error;
     }
 
     /* Listen. */
     if (style == SOCK_STREAM && listen(fd, 10) < 0) {
         error = sock_errno();
-        VLOG_ERR("%s: listen: %s", target, sock_strerror(error));
+        fprintf(stderr, "%s: listen: %s", target, sock_strerror(error));
         goto error;
     }
 
@@ -651,12 +645,12 @@ inet_open_passive(int style, const char *target, int default_port,
         socklen_t ss_len = sizeof ss;
         if (getsockname(fd, (struct sockaddr *) &ss, &ss_len) < 0) {
             error = sock_errno();
-            VLOG_ERR("%s: getsockname: %s", target, sock_strerror(error));
+            fprintf(stderr, "%s: getsockname: %s", target, sock_strerror(error));
             goto error;
         }
         if (kernel_chooses_port && kernel_print_port) {
-            VLOG_INFO("%s: listening on port %"PRIu16,
-                      target, ss_get_port(&ss));
+	    fprintf(stderr,"%s: listening on port %"PRIu16,
+		    target, ss_get_port(&ss));
         }
         if (ssp) {
             *ssp = ss;
@@ -707,7 +701,7 @@ write_fully(int fd, const void *p_, size_t size, size_t *bytes_written)
             size -= retval;
             p += retval;
         } else if (retval == 0) {
-            VLOG_WARN("write returned 0");
+            fprintf(stderr, "write returned 0");
             return EPROTO;
         } else if (errno != EINTR) {
             return errno;
@@ -735,13 +729,13 @@ fsync_parent_dir(const char *file_name)
                  * really an error. */
             } else {
                 error = errno;
-                VLOG_ERR("%s: fsync failed (%s)", dir, ovs_strerror(error));
+                fprintf(stderr, "%s: fsync failed (%s)", dir, ovs_strerror(error));
             }
         }
         close(fd);
     } else {
         error = errno;
-        VLOG_ERR("%s: open failed (%s)", dir, ovs_strerror(error));
+        fprintf(stderr, "%s: open failed (%s)", dir, ovs_strerror(error));
     }
     free(dir);
 #endif
@@ -779,7 +773,6 @@ get_mtime(const char *file_name, struct timespec *mtime)
 static int
 getsockopt_int(int fd, int level, int option, const char *optname, int *valuep)
 {
-    static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(5, 10);
     socklen_t len;
     int value;
     int error;
@@ -787,11 +780,11 @@ getsockopt_int(int fd, int level, int option, const char *optname, int *valuep)
     len = sizeof value;
     if (getsockopt(fd, level, option, &value, &len)) {
         error = sock_errno();
-        VLOG_ERR_RL(&rl, "getsockopt(%s): %s", optname, sock_strerror(error));
+        fprintf(stderr, "getsockopt(%s): %s", optname, sock_strerror(error));
     } else if (len != sizeof value) {
         error = EINVAL;
-        VLOG_ERR_RL(&rl, "getsockopt(%s): value is %u bytes (expected %"PRIuSIZE")",
-                    optname, (unsigned int) len, sizeof value);
+        fprintf(stderr, "getsockopt(%s): value is %u bytes (expected %"PRIuSIZE")",
+		optname, (unsigned int) len, sizeof value);
     } else {
         error = 0;
     }

@@ -40,9 +40,6 @@
  * cut-and-paste.  Since "sparse" is just a checker, not a compiler, it
  * doesn't matter that we don't define them. */
 #else
-#include "openvswitch/vlog.h"
-
-VLOG_DEFINE_THIS_MODULE(ovs_thread);
 
 /* If there is a reason that we cannot fork anymore (unless the fork will be
  * immediately followed by an exec), then this points to a string that
@@ -451,8 +448,8 @@ void
 assert_single_threaded_at(const char *where)
 {
     if (multithreaded) {
-        VLOG_FATAL("%s: attempted operation not allowed when multithreaded",
-                   where);
+        fprintf(stderr, "%s: attempted operation not allowed when multithreaded",
+	        where);
     }
 }
 
@@ -470,13 +467,13 @@ xfork_at(const char *where)
     pid_t pid;
 
     if (must_not_fork) {
-        VLOG_FATAL("%s: attempted to fork but forking not allowed (%s)",
-                   where, must_not_fork);
+        fprintf(stderr, "%s: attempted to fork but forking not allowed (%s)",
+		where, must_not_fork);
     }
 
     pid = fork();
     if (pid < 0) {
-        VLOG_FATAL("%s: fork failed (%s)", where, ovs_strerror(errno));
+        fprintf(stderr, "%s: fork failed (%s)", where, ovs_strerror(errno));
     }
     return pid;
 }
@@ -563,7 +560,7 @@ parse_cpuinfo(long int *n_cores)
 
     stream = fopen(file_name, "r");
     if (!stream) {
-        VLOG_DBG("%s: open failed (%s)", file_name, ovs_strerror(errno));
+        fprintf(stderr, "%s: open failed (%s)", file_name, ovs_strerror(errno));
         return;
     }
 
@@ -573,9 +570,9 @@ parse_cpuinfo(long int *n_cores)
         /* Find the next CPU package. */
         if (ovs_scan(line, "physical id%*[^:]: %u", &id)) {
             if (id > 63) {
-                VLOG_WARN("Counted over 64 CPU packages on this system. "
-                          "Parsing %s for core count may be inaccurate.",
-                          file_name);
+                fprintf(stderr, "Counted over 64 CPU packages on this system. "
+			"Parsing %s for core count may be inaccurate.",
+			file_name);
                 cores = 0;
                 break;
             }

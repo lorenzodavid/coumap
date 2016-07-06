@@ -21,7 +21,6 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <string.h>
-#include "coverage.h"
 #include "openvswitch/dynamic-string.h"
 #include "fatal-signal.h"
 #include "openvswitch/list.h"
@@ -29,14 +28,8 @@
 #include "seq.h"
 #include "socket-util.h"
 #include "timeval.h"
-#include "openvswitch/vlog.h"
 #include "hmap.h"
 #include "hash.h"
-
-VLOG_DEFINE_THIS_MODULE(poll_loop);
-
-COVERAGE_DEFINE(poll_create_node);
-COVERAGE_DEFINE(poll_zero_timeout);
 
 struct poll_node {
     struct hmap_node hmap_node;
@@ -104,8 +97,6 @@ poll_create_node(int fd, HANDLE wevent, short int events, const char *where)
 {
     struct poll_loop *loop = poll_loop();
     struct poll_node *node;
-
-    COVERAGE_INC(poll_create_node);
 
     /* Both 'fd' and 'wevent' cannot be set. */
     ovs_assert(!fd != !wevent);
@@ -232,69 +223,6 @@ poll_immediate_wake_at(const char *where)
     poll_timer_wait_at(0, where);
 }
 
-/* Logs, if appropriate, that the poll loop was awakened by an event
- * registered at 'where' (typically a source file and line number).  The other
- * arguments have two possible interpretations:
- *
- *   - If 'pollfd' is nonnull then it should be the "struct pollfd" that caused
- *     the wakeup.  'timeout' is ignored.
- *
- *   - If 'pollfd' is NULL then 'timeout' is the number of milliseconds after
- *     which the poll loop woke up.
- */
-static void
-log_wakeup(const char *where, const struct pollfd *pollfd, int timeout)
-{
-    static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(10, 10);
-    enum vlog_level level;
-    int cpu_usage;
-    struct ds s;
-
-    cpu_usage = get_cpu_usage();
-    if (VLOG_IS_DBG_ENABLED()) {
-        level = VLL_DBG;
-    } else if (cpu_usage > 50
-               && !thread_is_pmd()
-               && !VLOG_DROP_INFO(&rl)) {
-        level = VLL_INFO;
-    } else {
-        return;
-    }
-
-    ds_init(&s);
-    ds_put_cstr(&s, "wakeup due to ");
-    if (pollfd) {
-        /* char *description = describe_fd(pollfd->fd); */
-        /* if (pollfd->revents & POLLIN) { */
-        /*     ds_put_cstr(&s, "[POLLIN]"); */
-        /* } */
-        /* if (pollfd->revents & POLLOUT) { */
-        /*     ds_put_cstr(&s, "[POLLOUT]"); */
-        /* } */
-        /* if (pollfd->revents & POLLERR) { */
-        /*     ds_put_cstr(&s, "[POLLERR]"); */
-        /* } */
-        /* if (pollfd->revents & POLLHUP) { */
-        /*     ds_put_cstr(&s, "[POLLHUP]"); */
-        /* } */
-        /* if (pollfd->revents & POLLNVAL) { */
-        /*     ds_put_cstr(&s, "[POLLNVAL]"); */
-        /* } */
-        /* ds_put_format(&s, " on fd %d (%s)", pollfd->fd, description); */
-        /* free(description); */
-    } else {
-        ds_put_format(&s, "%d-ms timeout", timeout);
-    }
-    if (where) {
-        ds_put_format(&s, " at %s", where);
-    }
-    if (cpu_usage >= 0) {
-        ds_put_format(&s, " (%d%% CPU usage)", cpu_usage);
-    }
-    VLOG(level, "%s", ds_cstr(&s));
-    ds_destroy(&s);
-}
-
 static void
 free_poll_nodes(struct poll_loop *loop)
 {
@@ -330,10 +258,6 @@ poll_block(void)
      * poll_block. */
     fatal_signal_wait();
 
-    if (loop->timeout_when == LLONG_MIN) {
-        COVERAGE_INC(poll_zero_timeout);
-    }
-
     timewarp_run();
     pollfds = xmalloc(hmap_count(&loop->poll_nodes) * sizeof *pollfds);
 
@@ -364,18 +288,7 @@ poll_block(void)
     retval = time_poll(pollfds, hmap_count(&loop->poll_nodes), wevents,
                        loop->timeout_when, &elapsed);
     if (retval < 0) {
-        static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(1, 5);
-        VLOG_ERR_RL(&rl, "poll: %s", ovs_strerror(-retval));
-    } else if (!retval) {
-        log_wakeup(loop->timeout_where, NULL, elapsed);
-    } else if (get_cpu_usage() > 50 || VLOG_IS_DBG_ENABLED()) {
-        i = 0;
-        HMAP_FOR_EACH (node, hmap_node, &loop->poll_nodes) {
-            if (pollfds[i].revents) {
-                log_wakeup(node->where, &pollfds[i], 0);
-            }
-            i++;
-        }
+        fprintf(stderr, "poll: %s", ovs_strerror(-retval));
     }
 
     free_poll_nodes(loop);
@@ -389,7 +302,7 @@ poll_block(void)
 
     seq_woke();
 }
-
+
 static void
 free_poll_loop(void *loop_)
 {
@@ -420,4 +333,3 @@ poll_loop(void)
     }
     return loop;
 }
-

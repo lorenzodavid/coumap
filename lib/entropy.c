@@ -25,9 +25,9 @@
 #endif
 #include "util.h"
 #include "socket-util.h"
-#include "openvswitch/vlog.h"
+/* #include "openvswitch/vlog.h" */
 
-VLOG_DEFINE_THIS_MODULE(entropy);
+/* VLOG_DEFINE_THIS_MODULE(entropy); */
 
 static const char urandom[] = "/dev/urandom";
 
@@ -43,15 +43,15 @@ get_entropy(void *buffer, size_t n)
 
     fd = open(urandom, O_RDONLY);
     if (fd < 0) {
-        VLOG_ERR("%s: open failed (%s)", urandom, ovs_strerror(errno));
+        fprintf(stderr, "%s: open failed (%s)", urandom, ovs_strerror(errno));
         return errno ? errno : EINVAL;
     }
 
-    /* error = read_fully(fd, buffer, n, &bytes_read); */
+    error = read_fully(fd, buffer, n, &bytes_read);
     close(fd);
 
     if (error) {
-        VLOG_ERR("%s: read error (%s)", urandom, ovs_retval_to_string(error));
+        fprintf(stderr, "%s: read error (%s)", urandom, ovs_retval_to_string(error));
     }
 #else
     int error = 0;
@@ -60,7 +60,7 @@ get_entropy(void *buffer, size_t n)
     CryptAcquireContext(&crypt_prov, NULL, NULL,
                         PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!CryptGenRandom(crypt_prov, n, buffer)) {
-        VLOG_ERR("CryptGenRandom: read error (%s)", ovs_lasterror_to_string());
+        fprintf(stderr, "CryptGenRandom: read error (%s)", ovs_lasterror_to_string());
         error = EINVAL;
     }
 
@@ -76,7 +76,7 @@ get_entropy_or_die(void *buffer, size_t n)
 {
     int error = get_entropy(buffer, n);
     if (error) {
-        VLOG_FATAL("%s: read error (%s)",
+        fprintf(stderr, "%s: read error (%s)",
                    urandom, ovs_retval_to_string(error));
     }
 }

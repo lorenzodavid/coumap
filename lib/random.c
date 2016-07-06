@@ -44,6 +44,22 @@ DEFINE_STATIC_PER_THREAD_DATA(uint32_t, seed, 0);
 static uint32_t random_next(void);
 
 void
+xgettimeofday(struct timeval *tv)
+{
+#ifndef _WIN32
+    if (gettimeofday(tv, NULL) == -1) {
+        fprintf(stderr, "gettimeofday failed (%s)", ovs_strerror(errno));
+    }
+#else
+    ULARGE_INTEGER current_time = xgetfiletime();
+
+    tv->tv_sec = (current_time.QuadPart - unix_epoch) / 10000000;
+    tv->tv_usec = ((current_time.QuadPart - unix_epoch) %
+                   10000000) / 10;
+#endif
+}
+
+void
 random_init(void)
 {
     uint32_t *seedp = seed_get();

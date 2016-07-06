@@ -22,10 +22,7 @@
 #include "ovs-thread.h"
 #include "poll-loop.h"
 #include "seq.h"
-#include "timeval.h"
-#include "openvswitch/vlog.h"
-
-VLOG_DEFINE_THIS_MODULE(ovs_rcu);
+#include "simple_timeval.h"
 
 struct ovsrcu_cb {
     void (*function)(void *aux);
@@ -197,8 +194,8 @@ ovsrcu_synchronize(void)
 
         elapsed = time_msec() - start;
         if (elapsed >= warning_threshold) {
-            VLOG_WARN("blocked %u ms waiting for %s to quiesce",
-                      elapsed, stalled_thread);
+  	    fprintf(stderr, "blocked %u ms waiting for %s to quiesce",
+		    elapsed, stalled_thread);
             warning_threshold *= 2;
         }
         poll_timer_wait_until(start + warning_threshold);

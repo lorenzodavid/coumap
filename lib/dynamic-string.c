@@ -191,23 +191,23 @@ void
 ds_put_strftime_msec(struct ds *ds, const char *template, long long int when,
                      bool utc)
 {
-    struct tm_msec tm;
-    if (utc) {
-        gmtime_msec(when, &tm);
-    } else {
-        localtime_msec(when, &tm);
-    }
+    /* struct tm_msec tm; */
+    /* if (utc) { */
+    /*     gmtime_msec(when, &tm); */
+    /* } else { */
+    /*     localtime_msec(when, &tm); */
+    /* } */
 
-    for (;;) {
-        size_t avail = ds->string ? ds->allocated - ds->length + 1 : 0;
-        size_t used = strftime_msec(&ds->string[ds->length], avail, template,
-                                    &tm);
-        if (used) {
-            ds->length += used;
-            return;
-        }
-        ds_reserve(ds, ds->length + (avail < 32 ? 64 : 2 * avail));
-    }
+    /* for (;;) { */
+    /*     size_t avail = ds->string ? ds->allocated - ds->length + 1 : 0; */
+    /*     size_t used = strftime_msec(&ds->string[ds->length], avail, template, */
+    /*                                 &tm); */
+    /*     if (used) { */
+    /*         ds->length += used; */
+    /*         return; */
+    /*     } */
+    /*     ds_reserve(ds, ds->length + (avail < 32 ? 64 : 2 * avail)); */
+    /* } */
 }
 
 /* Returns a malloc()'d string for time 'when' based on 'template', in local

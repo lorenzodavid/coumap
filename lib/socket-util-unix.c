@@ -28,9 +28,6 @@
 #include "fatal-signal.h"
 #include "random.h"
 #include "util.h"
-#include "openvswitch/vlog.h"
-
-VLOG_DEFINE_THIS_MODULE(socket_util_unix);
 
 /* #ifdefs make it a pain to maintain code: you have to try to build both ways.
  * Thus, this file compiles all of the code regardless of the target, by
@@ -53,7 +50,7 @@ void
 xpipe(int fds[2])
 {
     if (pipe(fds)) {
-        VLOG_FATAL("failed to create pipe (%s)", ovs_strerror(errno));
+        fprintf(stderr, "failed to create pipe (%s)", ovs_strerror(errno));
     }
 }
 
@@ -122,10 +119,9 @@ shorten_name_via_proc(const char *name, char short_name[MAX_UN_LEN + 1],
     dir = dir_name(name);
     dirfd = open(dir, O_DIRECTORY | O_RDONLY);
     if (dirfd < 0) {
-        static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(1, 1);
         int error = errno;
 
-        VLOG_WARN_RL(&rl, "%s: open failed (%s)", dir, ovs_strerror(error));
+        fprintf(stderr, "%s: open failed (%s)", dir, ovs_strerror(error));
         free(dir);
 
         return error;
@@ -229,10 +225,8 @@ make_sockaddr_un(const char *name, struct sockaddr_un *un, socklen_t *un_len,
             error = shorten_name_via_symlink(name, short_name, linkname);
         }
         if (error) {
-            static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(1, 1);
-
-            VLOG_WARN_RL(&rl, "Unix socket name %s is longer than maximum "
-                         "%"PRIuSIZE" bytes", name, MAX_UN_LEN);
+            fprintf(stderr, "Unix socket name %s is longer than maximum "
+		    "%"PRIuSIZE" bytes", name, MAX_UN_LEN);
             return error;
         }
 
@@ -338,8 +332,8 @@ make_unix_socket(int style, bool nonblock,
         int dirfd;
 
         if (unlink(bind_path) && errno != ENOENT) {
-            VLOG_WARN("unlinking \"%s\": %s\n",
-                      bind_path, ovs_strerror(errno));
+            fprintf(stderr, "unlinking \"%s\": %s\n",
+			     bind_path, ovs_strerror(errno));
         }
         fatal_signal_add_file_to_unlink(bind_path);
 
@@ -392,43 +386,4 @@ get_unix_name_len(socklen_t sun_len)
     return (sun_len >= offsetof(struct sockaddr_un, sun_path)
             ? sun_len - offsetof(struct sockaddr_un, sun_path)
             : 0);
-}
-
-/* Calls ioctl() on an AF_INET sock, passing the specified 'command' and
- * 'arg'.  Returns 0 if successful, otherwise a positive errno value. */
-int
-af_inet_ioctl(unsigned long int command, const void *arg)
-{
-    static struct ovsthread_once once = OVSTHREAD_ONCE_INITIALIZER;
-    static int sock;
-
-    if (ovsthread_once_start(&once)) {
-        sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (sock < 0) {
-            int error = sock_errno();
-            VLOG_ERR("failed to create inet socket: %s", sock_strerror(error));
-            sock = -error;
-        }
-        ovsthread_once_done(&once);
-    }
-
-    return (sock < 0 ? -sock
-            : ioctl(sock, command, arg) == -1 ? errno
-            : 0);
-}
-
-int
-af_inet_ifreq_ioctl(const char *name, struct ifreq *ifr, unsigned long int cmd,
-                    const char *cmd_name)
-{
-    int error;
-
-    ovs_strzcpy(ifr->ifr_name, name, sizeof ifr->ifr_name);
-    error = af_inet_ioctl(cmd, ifr);
-    if (error) {
-        static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(5, 20);
-        VLOG_DBG_RL(&rl, "%s: ioctl(%s) failed: %s", name, cmd_name,
-                    ovs_strerror(error));
-    }
-    return error;
 }

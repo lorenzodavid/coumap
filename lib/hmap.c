@@ -18,17 +18,8 @@
 #include "hmap.h"
 #include <stdint.h>
 #include <string.h>
-#include "coverage.h"
 #include "random.h"
 #include "util.h"
-#include "openvswitch/vlog.h"
-
-VLOG_DEFINE_THIS_MODULE(hmap);
-
-COVERAGE_DEFINE(hmap_pathological);
-COVERAGE_DEFINE(hmap_expand);
-COVERAGE_DEFINE(hmap_shrink);
-COVERAGE_DEFINE(hmap_reserve);
 
 /* Initializes 'hmap' as an empty hash table. */
 void
@@ -112,10 +103,9 @@ resize(struct hmap *hmap, size_t new_mask, const char *where)
             count++;
         }
         if (count > 5) {
-            static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(10, 10);
-            COVERAGE_INC(hmap_pathological);
-            VLOG_DBG_RL(&rl, "%s: %d nodes in bucket (%"PRIuSIZE" nodes, %"PRIuSIZE" buckets)",
-                        where, count, hmap->n, hmap->mask + 1);
+	    // hmap patological
+            fprintf(stderr, "%s: %d nodes in bucket (%"PRIuSIZE" nodes, %"PRIuSIZE" buckets)",
+		    where, count, hmap->n, hmap->mask + 1);
         }
     }
     hmap_swap(hmap, &tmp);
@@ -152,7 +142,7 @@ hmap_expand_at(struct hmap *hmap, const char *where)
 {
     size_t new_mask = calc_mask(hmap->n);
     if (new_mask > hmap->mask) {
-        COVERAGE_INC(hmap_expand);
+        // hmap expand
         resize(hmap, new_mask, where);
     }
 }
@@ -167,7 +157,7 @@ hmap_shrink_at(struct hmap *hmap, const char *where)
 {
     size_t new_mask = calc_mask(hmap->n);
     if (new_mask < hmap->mask) {
-        COVERAGE_INC(hmap_shrink);
+        // hmap shrink
         resize(hmap, new_mask, where);
     }
 }
@@ -184,7 +174,7 @@ hmap_reserve_at(struct hmap *hmap, size_t n, const char *where)
 {
     size_t new_mask = calc_mask(n);
     if (new_mask > hmap->mask) {
-        COVERAGE_INC(hmap_reserve);
+        // reserve
         resize(hmap, new_mask, where);
     }
 }

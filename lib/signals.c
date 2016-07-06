@@ -25,9 +25,6 @@
 #include "socket-util.h"
 #include "openvswitch/type-props.h"
 #include "util.h"
-#include "openvswitch/vlog.h"
-
-VLOG_DEFINE_THIS_MODULE(signals);
 
 #if defined(_NSIG)
 #define N_SIGNALS _NSIG
@@ -68,8 +65,8 @@ xsigaction(int signum, const struct sigaction *new, struct sigaction *old)
     if (sigaction(signum, new, old)) {
         char namebuf[SIGNAL_NAME_BUFSIZE];
 
-        VLOG_FATAL("sigaction(%s) failed (%s)",
-                   signal_name(signum, namebuf, sizeof namebuf),
-                   ovs_strerror(errno));
+        fprintf(stderr, "sigaction(%s) failed (%s)",
+		signal_name(signum, namebuf, sizeof namebuf),
+		ovs_strerror(errno));
     }
 }

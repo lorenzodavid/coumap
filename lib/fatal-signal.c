@@ -30,15 +30,12 @@
 #include "signals.h"
 #include "socket-util.h"
 #include "util.h"
-#include "openvswitch/vlog.h"
 
 #include "openvswitch/type-props.h"
 
 #ifndef SIG_ATOMIC_MAX
 #define SIG_ATOMIC_MAX TYPE_MAXIMUM(sig_atomic_t)
 #endif
-
-VLOG_DEFINE_THIS_MODULE(fatal_signal);
 
 /* Signals to catch. */
 #ifndef _WIN32
@@ -94,7 +91,7 @@ fatal_signal_init(void)
         wevent = CreateEvent(NULL, TRUE, FALSE, NULL);
         if (!wevent) {
             char *msg_buf = ovs_lasterror_to_string();
-            VLOG_FATAL("Failed to create a event (%s).", msg_buf);
+            fprintf(stderr, "Failed to create a event (%s).", msg_buf);
         }
 
         /* Register a function to handle Ctrl+C. */
@@ -109,11 +106,11 @@ fatal_signal_init(void)
             xsigaction(sig_nr, NULL, &old_sa);
             if (old_sa.sa_handler == SIG_DFL
                 && signal(sig_nr, fatal_signal_handler) == SIG_ERR) {
-                VLOG_FATAL("signal failed (%s)", ovs_strerror(errno));
+	        fprintf(stderr, "signal failed (%s)", ovs_strerror(errno));
             }
 #else
             if (signal(sig_nr, fatal_signal_handler) == SIG_ERR) {
-                VLOG_FATAL("signal failed (%s)", ovs_strerror(errno));
+	        fprintf(stderr, "signal failed (%s)", ovs_strerror(errno));
             }
 #endif
         }
@@ -196,10 +193,10 @@ fatal_signal_run(void)
         ovs_mutex_lock(&mutex);
 
 #ifndef _WIN32
-        VLOG_WARN("terminating with signal %d (%s)",
+        fprintf(stderr, "terminating with signal %d (%s)",
                   (int)sig_nr, signal_name(sig_nr, namebuf, sizeof namebuf));
 #else
-        VLOG_WARN("terminating with signal %d", (int)sig_nr);
+        fprintf(stderr, "terminating with signal %d", (int)sig_nr);
 #endif
         call_hooks(sig_nr);
         fflush(stderr);
@@ -319,7 +316,7 @@ fatal_signal_unlink_file_now(const char *file)
 
     error = unlink(file) ? errno : 0;
     if (error) {
-        VLOG_WARN("could not unlink \"%s\" (%s)", file, ovs_strerror(error));
+        fprintf(stderr, "could not unlink \"%s\" (%s)", file, ovs_strerror(error));
     }
 
     fatal_signal_remove_file_to_unlink(file);
