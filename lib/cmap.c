@@ -16,15 +16,10 @@
 
 #include "config.h"
 #include "cmap.h"
-#include "coverage.h"
 #include "bitmap.h"
 #include "hash.h"
 #include "ovs-rcu.h"
 #include "random.h"
-#include "util.h"
-
-COVERAGE_DEFINE(cmap_expand);
-COVERAGE_DEFINE(cmap_shrink);
 
 /* Optimistic Concurrent Cuckoo Hash
  * =================================
@@ -783,7 +778,7 @@ cmap_insert(struct cmap *cmap, struct cmap_node *node, uint32_t hash)
     ovsrcu_set_hidden(&node->next, NULL);
 
     if (OVS_UNLIKELY(impl->n >= impl->max_n)) {
-        COVERAGE_INC(cmap_expand);
+        // cmap expands
         impl = cmap_rehash(cmap, (impl->mask << 1) | 1);
     }
 
@@ -852,7 +847,7 @@ cmap_replace(struct cmap *cmap, struct cmap_node *old_node,
     if (!new_node) {
         impl->n--;
         if (OVS_UNLIKELY(impl->n < impl->min_n)) {
-            COVERAGE_INC(cmap_shrink);
+	    // cmap shrinks
             impl = cmap_rehash(cmap, impl->mask >> 1);
         }
     }

@@ -1,4 +1,5 @@
-/* Copyright (c) 2008, 2009 Nicira, Inc.
+/*
+ * Copyright (c) 2008, 2009, 2010, 2011, 2012, 2013 Nicira, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef LOCKFILE_H
-#define LOCKFILE_H 1
+#ifndef TIMEVAL_H
+#define TIMEVAL_H 1
 
-struct lockfile;
+#include <time.h>
+#include "openvswitch/type-props.h"
+#include "util.h"
 
-char *lockfile_name(const char *file);
-int lockfile_lock(const char *file, struct lockfile **);
-void lockfile_unlock(struct lockfile *);
-void lockfile_postfork(void);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-#endif /* lib/lockfile.h */
+long long int time_msec(void);
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif /* timeval.h */

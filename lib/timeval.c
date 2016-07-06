@@ -99,8 +99,7 @@ DEFINE_STATIC_PER_THREAD_DATA(uint64_t, last_seq, 0);
  * LLONG_MAX). */
 static long long int deadline = LLONG_MAX;
 
-/* Monotonic time, in milliseconds, at which the last call to time_poll() woke
- * up. */
+/* Monotonic time, in milliseconds, at which the last call to time_poll() woke * up. */
 DEFINE_STATIC_PER_THREAD_DATA(long long int, last_wakeup, 0);
 
 static void log_poll_interval(long long int last_wakeup);

@@ -28,7 +28,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
-#include "async-append.h"
+/* #include "async-append.h" */
 #include "coverage.h"
 #include "dirs.h"
 #include "openvswitch/dynamic-string.h"
@@ -396,13 +396,13 @@ vlog_set_log_file(const char *file_name)
     if (log_fd >= 0) {
         free(log_file_name);
         close(log_fd);
-        async_append_destroy(log_writer);
+        /* async_append_destroy(log_writer); */
     }
 
     log_file_name = xstrdup(new_log_file_name);
     log_fd = new_log_fd;
     if (log_async) {
-        log_writer = async_append_create(new_log_fd);
+        /* log_writer = async_append_create(new_log_fd); */
     }
 
     LIST_FOR_EACH (mp, list, &vlog_modules) {
@@ -693,7 +693,7 @@ vlog_unixctl_close(struct unixctl_conn *conn, int argc OVS_UNUSED,
         close(log_fd);
         log_fd = -1;
 
-        async_append_destroy(log_writer);
+        /* async_append_destroy(log_writer); */
         log_writer = NULL;
 
         struct vlog_module *mp;
@@ -762,58 +762,58 @@ vlog_disable_rate_limit(struct unixctl_conn *conn, int argc,
 void
 vlog_init(void)
 {
-    static struct ovsthread_once once = OVSTHREAD_ONCE_INITIALIZER;
+    /* static struct ovsthread_once once = OVSTHREAD_ONCE_INITIALIZER; */
 
-    if (ovsthread_once_start(&once)) {
-        long long int now;
-        int facility;
-        bool print_syslog_target_deprecation;
+    /* if (ovsthread_once_start(&once)) { */
+    /*     long long int now; */
+    /*     int facility; */
+    /*     bool print_syslog_target_deprecation; */
 
-        /* Do initialization work that needs to be done before any logging
-         * occurs.  We want to keep this really minimal because any attempt to
-         * log anything before calling ovsthread_once_done() will deadlock. */
-        atomic_read_explicit(&log_facility, &facility, memory_order_relaxed);
-        if (!syslogger) {
-            /* syslogger = syslog_libc_create(); */
-        }
-        syslogger->class->openlog(syslogger, facility ? facility : LOG_DAEMON);
-        ovsthread_once_done(&once);
+    /*     /\* Do initialization work that needs to be done before any logging */
+    /*      * occurs.  We want to keep this really minimal because any attempt to */
+    /*      * log anything before calling ovsthread_once_done() will deadlock. *\/ */
+    /*     atomic_read_explicit(&log_facility, &facility, memory_order_relaxed); */
+    /*     if (!syslogger) { */
+    /*         /\* syslogger = syslog_libc_create(); *\/ */
+    /*     } */
+    /*     syslogger->class->openlog(syslogger, facility ? facility : LOG_DAEMON); */
+    /*     ovsthread_once_done(&once); */
 
-        /* Now do anything that we want to happen only once but doesn't have to
-         * finish before we start logging. */
+    /*     /\* Now do anything that we want to happen only once but doesn't have to */
+    /*      * finish before we start logging. *\/ */
 
-        now = time_wall_msec();
-        if (now < 0) {
-            char *s = xastrftime_msec("%a, %d %b %Y %H:%M:%S", now, true);
-            VLOG_ERR("current time is negative: %s (%lld)", s, now);
-            free(s);
-        }
+    /*     now = time_wall_msec(); */
+    /*     if (now < 0) { */
+    /*         char *s = xastrftime_msec("%a, %d %b %Y %H:%M:%S", now, true); */
+    /*         VLOG_ERR("current time is negative: %s (%lld)", s, now); */
+    /*         free(s); */
+    /*     } */
 
-        /* unixctl_command_register( */
-        /*     "vlog/set", "{spec | PATTERN:destination:pattern}", */
-        /*     1, INT_MAX, vlog_unixctl_set, NULL); */
-        /* unixctl_command_register("vlog/list", "", 0, 0, vlog_unixctl_list, */
-        /*                          NULL); */
-        /* unixctl_command_register("vlog/list-pattern", "", 0, 0, */
-        /*                          vlog_unixctl_list_pattern, NULL); */
-        /* unixctl_command_register("vlog/enable-rate-limit", "[module]...", */
-        /*                          0, INT_MAX, vlog_enable_rate_limit, NULL); */
-        /* unixctl_command_register("vlog/disable-rate-limit", "[module]...", */
-        /*                          0, INT_MAX, vlog_disable_rate_limit, NULL); */
-        /* unixctl_command_register("vlog/reopen", "", 0, 0, */
-        /*                          vlog_unixctl_reopen, NULL); */
-        /* unixctl_command_register("vlog/close", "", 0, 0, */
-        /*                          vlog_unixctl_close, NULL); */
+    /*     /\* unixctl_command_register( *\/ */
+    /*     /\*     "vlog/set", "{spec | PATTERN:destination:pattern}", *\/ */
+    /*     /\*     1, INT_MAX, vlog_unixctl_set, NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/list", "", 0, 0, vlog_unixctl_list, *\/ */
+    /*     /\*                          NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/list-pattern", "", 0, 0, *\/ */
+    /*     /\*                          vlog_unixctl_list_pattern, NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/enable-rate-limit", "[module]...", *\/ */
+    /*     /\*                          0, INT_MAX, vlog_enable_rate_limit, NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/disable-rate-limit", "[module]...", *\/ */
+    /*     /\*                          0, INT_MAX, vlog_disable_rate_limit, NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/reopen", "", 0, 0, *\/ */
+    /*     /\*                          vlog_unixctl_reopen, NULL); *\/ */
+    /*     /\* unixctl_command_register("vlog/close", "", 0, 0, *\/ */
+    /*     /\*                          vlog_unixctl_close, NULL); *\/ */
 
-        ovs_rwlock_rdlock(&pattern_rwlock);
-        print_syslog_target_deprecation = syslog_fd >= 0;
-        ovs_rwlock_unlock(&pattern_rwlock);
+    /*     ovs_rwlock_rdlock(&pattern_rwlock); */
+    /*     print_syslog_target_deprecation = syslog_fd >= 0; */
+    /*     ovs_rwlock_unlock(&pattern_rwlock); */
 
-        if (print_syslog_target_deprecation) {
-            VLOG_WARN("--syslog-target flag is deprecated, use "
-                      "--syslog-method instead");
-        }
-    }
+    /*     if (print_syslog_target_deprecation) { */
+    /*         VLOG_WARN("--syslog-target flag is deprecated, use " */
+    /*                   "--syslog-method instead"); */
+    /*     } */
+    /* } */
 }
 
 /* Enables VLF_FILE log output to be written asynchronously to disk.
@@ -827,7 +827,7 @@ vlog_enable_async(void)
     ovs_mutex_lock(&log_file_mutex);
     log_async = true;
     if (log_fd >= 0 && !log_writer) {
-        log_writer = async_append_create(log_fd);
+        /* log_writer = async_append_create(log_fd); */
     }
     ovs_mutex_unlock(&log_file_mutex);
 }
@@ -860,7 +860,7 @@ vlog_get_levels(void)
         }
         ds_put_char(&line, '\n');
 
-        svec_add_nocopy(&lines, ds_steal_cstr(&line));
+        /* svec_add_nocopy(&lines, ds_steal_cstr(&line)); */
     }
     ovs_mutex_unlock(&log_file_mutex);
 
@@ -928,117 +928,117 @@ format_log_message(const struct vlog_module *module, enum vlog_level level,
                    const char *pattern, const char *message,
                    va_list args_, struct ds *s)
 {
-    char tmp[128];
-    va_list args;
-    const char *p;
-    int facility;
+    /* char tmp[128]; */
+    /* va_list args; */
+    /* const char *p; */
+    /* int facility; */
 
-    ds_clear(s);
-    for (p = pattern; *p != '\0'; ) {
-        const char *subprogram_name;
-        enum { LEFT, RIGHT } justify = RIGHT;
-        int pad = '0';
-        size_t length, field, used;
+    /* ds_clear(s); */
+    /* for (p = pattern; *p != '\0'; ) { */
+    /*     const char *subprogram_name; */
+    /*     enum { LEFT, RIGHT } justify = RIGHT; */
+    /*     int pad = '0'; */
+    /*     size_t length, field, used; */
 
-        if (*p != '%') {
-            ds_put_char(s, *p++);
-            continue;
-        }
+    /*     if (*p != '%') { */
+    /*         ds_put_char(s, *p++); */
+    /*         continue; */
+    /*     } */
 
-        p++;
-        if (*p == '-') {
-            justify = LEFT;
-            p++;
-        }
-        if (*p == '0') {
-            pad = '0';
-            p++;
-        }
-        field = 0;
-        while (isdigit((unsigned char)*p)) {
-            field = (field * 10) + (*p - '0');
-            p++;
-        }
+    /*     p++; */
+    /*     if (*p == '-') { */
+    /*         justify = LEFT; */
+    /*         p++; */
+    /*     } */
+    /*     if (*p == '0') { */
+    /*         pad = '0'; */
+    /*         p++; */
+    /*     } */
+    /*     field = 0; */
+    /*     while (isdigit((unsigned char)*p)) { */
+    /*         field = (field * 10) + (*p - '0'); */
+    /*         p++; */
+    /*     } */
 
-        length = s->length;
-        switch (*p++) {
-        case 'A':
-            ds_put_cstr(s, program_name);
-            break;
-        case 'B':
-            atomic_read_explicit(&log_facility, &facility,
-                                 memory_order_relaxed);
-            facility = facility ? facility : LOG_LOCAL0;
-            ds_put_format(s, "%d", facility + syslog_levels[level]);
-            break;
-        case 'c':
-            p = fetch_braces(p, "", tmp, sizeof tmp);
-            ds_put_cstr(s, vlog_get_module_name(module));
-            break;
-        case 'd':
-            p = fetch_braces(p, "%Y-%m-%d %H:%M:%S.###", tmp, sizeof tmp);
-            ds_put_strftime_msec(s, tmp, time_wall_msec(), false);
-            break;
-        case 'D':
-            p = fetch_braces(p, "%Y-%m-%d %H:%M:%S.###", tmp, sizeof tmp);
-            ds_put_strftime_msec(s, tmp, time_wall_msec(), true);
-            break;
-        case 'E':
-            gethostname(tmp, sizeof tmp);
-            tmp[sizeof tmp - 1] = '\0';
-            ds_put_cstr(s, tmp);
-            break;
-        case 'm':
-            /* Format user-supplied log message and trim trailing new-lines. */
-            length = s->length;
-            va_copy(args, args_);
-            ds_put_format_valist(s, message, args);
-            va_end(args);
-            while (s->length > length && s->string[s->length - 1] == '\n') {
-                s->length--;
-            }
-            break;
-        case 'N':
-            ds_put_format(s, "%u", *msg_num_get_unsafe());
-            break;
-        case 'n':
-            ds_put_char(s, '\n');
-            break;
-        case 'p':
-            ds_put_cstr(s, vlog_get_level_name(level));
-            break;
-        case 'P':
-            ds_put_format(s, "%ld", (long int) getpid());
-            break;
-        case 'r':
-            ds_put_format(s, "%lld", time_msec() - time_boot_msec());
-            break;
-        case 't':
-            subprogram_name = get_subprogram_name();
-            ds_put_cstr(s, subprogram_name[0] ? subprogram_name : "main");
-            break;
-        case 'T':
-            subprogram_name = get_subprogram_name();
-            if (subprogram_name[0]) {
-                ds_put_format(s, "(%s)", subprogram_name);
-            }
-            break;
-        default:
-            ds_put_char(s, p[-1]);
-            break;
-        }
-        used = s->length - length;
-        if (used < field) {
-            size_t n_pad = field - used;
-            if (justify == RIGHT) {
-                ds_put_uninit(s, n_pad);
-                memmove(&s->string[length + n_pad], &s->string[length], used);
-                memset(&s->string[length], pad, n_pad);
-            } else {
-                ds_put_char_multiple(s, pad, n_pad);
-            }
-        }
-    }
+    /*     length = s->length; */
+    /*     switch (*p++) { */
+    /*     case 'A': */
+    /*         ds_put_cstr(s, program_name); */
+    /*         break; */
+    /*     case 'B': */
+    /*         atomic_read_explicit(&log_facility, &facility, */
+    /*                              memory_order_relaxed); */
+    /*         facility = facility ? facility : LOG_LOCAL0; */
+    /*         ds_put_format(s, "%d", facility + syslog_levels[level]); */
+    /*         break; */
+    /*     case 'c': */
+    /*         p = fetch_braces(p, "", tmp, sizeof tmp); */
+    /*         ds_put_cstr(s, vlog_get_module_name(module)); */
+    /*         break; */
+    /*     case 'd': */
+    /*         p = fetch_braces(p, "%Y-%m-%d %H:%M:%S.###", tmp, sizeof tmp); */
+    /*         ds_put_strftime_msec(s, tmp, time_wall_msec(), false); */
+    /*         break; */
+    /*     case 'D': */
+    /*         p = fetch_braces(p, "%Y-%m-%d %H:%M:%S.###", tmp, sizeof tmp); */
+    /*         ds_put_strftime_msec(s, tmp, time_wall_msec(), true); */
+    /*         break; */
+    /*     case 'E': */
+    /*         gethostname(tmp, sizeof tmp); */
+    /*         tmp[sizeof tmp - 1] = '\0'; */
+    /*         ds_put_cstr(s, tmp); */
+    /*         break; */
+    /*     case 'm': */
+    /*         /\* Format user-supplied log message and trim trailing new-lines. *\/ */
+    /*         length = s->length; */
+    /*         va_copy(args, args_); */
+    /*         ds_put_format_valist(s, message, args); */
+    /*         va_end(args); */
+    /*         while (s->length > length && s->string[s->length - 1] == '\n') { */
+    /*             s->length--; */
+    /*         } */
+    /*         break; */
+    /*     case 'N': */
+    /*         ds_put_format(s, "%u", *msg_num_get_unsafe()); */
+    /*         break; */
+    /*     case 'n': */
+    /*         ds_put_char(s, '\n'); */
+    /*         break; */
+    /*     case 'p': */
+    /*         ds_put_cstr(s, vlog_get_level_name(level)); */
+    /*         break; */
+    /*     case 'P': */
+    /*         ds_put_format(s, "%ld", (long int) getpid()); */
+    /*         break; */
+    /*     case 'r': */
+    /*         ds_put_format(s, "%lld", time_msec() - time_boot_msec()); */
+    /*         break; */
+    /*     case 't': */
+    /*         subprogram_name = get_subprogram_name(); */
+    /*         ds_put_cstr(s, subprogram_name[0] ? subprogram_name : "main"); */
+    /*         break; */
+    /*     case 'T': */
+    /*         subprogram_name = get_subprogram_name(); */
+    /*         if (subprogram_name[0]) { */
+    /*             ds_put_format(s, "(%s)", subprogram_name); */
+    /*         } */
+    /*         break; */
+    /*     default: */
+    /*         ds_put_char(s, p[-1]); */
+    /*         break; */
+    /*     } */
+    /*     used = s->length - length; */
+    /*     if (used < field) { */
+    /*         size_t n_pad = field - used; */
+    /*         if (justify == RIGHT) { */
+    /*             ds_put_uninit(s, n_pad); */
+    /*             memmove(&s->string[length + n_pad], &s->string[length], used); */
+    /*             memset(&s->string[length], pad, n_pad); */
+    /*         } else { */
+    /*             ds_put_char_multiple(s, pad, n_pad); */
+    /*         } */
+    /*     } */
+    /* } */
 }
 
 /* Exports the given 'syslog_message' to the configured udp syslog sink. */
@@ -1121,9 +1121,9 @@ vlog_valist(const struct vlog_module *module, enum vlog_level level,
             ovs_mutex_lock(&log_file_mutex);
             if (log_fd >= 0) {
                 if (log_writer) {
-                    async_append_write(log_writer, s.string, s.length);
+                    /* async_append_write(log_writer, s.string, s.length); */
                     if (level == VLL_EMER) {
-                        async_append_flush(log_writer);
+                        /* async_append_flush(log_writer); */
                     }
                 } else {
                     ignore(write(log_fd, s.string, s.length));
@@ -1223,41 +1223,41 @@ bool
 vlog_should_drop(const struct vlog_module *module, enum vlog_level level,
                  struct vlog_rate_limit *rl)
 {
-    if (!module->honor_rate_limits) {
-        return false;
-    }
+    /* if (!module->honor_rate_limits) { */
+    /*     return false; */
+    /* } */
 
-    if (!vlog_is_enabled(module, level)) {
-        return true;
-    }
+    /* if (!vlog_is_enabled(module, level)) { */
+    /*     return true; */
+    /* } */
 
-    ovs_mutex_lock(&rl->mutex);
-    if (!token_bucket_withdraw(&rl->token_bucket, VLOG_MSG_TOKENS)) {
-        time_t now = time_now();
-        if (!rl->n_dropped) {
-            rl->first_dropped = now;
-        }
-        rl->last_dropped = now;
-        rl->n_dropped++;
-        ovs_mutex_unlock(&rl->mutex);
-        return true;
-    }
+    /* ovs_mutex_lock(&rl->mutex); */
+    /* if (!token_bucket_withdraw(&rl->token_bucket, VLOG_MSG_TOKENS)) { */
+    /*     time_t now = time_now(); */
+    /*     if (!rl->n_dropped) { */
+    /*         rl->first_dropped = now; */
+    /*     } */
+    /*     rl->last_dropped = now; */
+    /*     rl->n_dropped++; */
+    /*     ovs_mutex_unlock(&rl->mutex); */
+    /*     return true; */
+    /* } */
 
-    if (!rl->n_dropped) {
-        ovs_mutex_unlock(&rl->mutex);
-    } else {
-        time_t now = time_now();
-        unsigned int n_dropped = rl->n_dropped;
-        unsigned int first_dropped_elapsed = now - rl->first_dropped;
-        unsigned int last_dropped_elapsed = now - rl->last_dropped;
-        rl->n_dropped = 0;
-        ovs_mutex_unlock(&rl->mutex);
+    /* if (!rl->n_dropped) { */
+    /*     ovs_mutex_unlock(&rl->mutex); */
+    /* } else { */
+    /*     time_t now = time_now(); */
+    /*     unsigned int n_dropped = rl->n_dropped; */
+    /*     unsigned int first_dropped_elapsed = now - rl->first_dropped; */
+    /*     unsigned int last_dropped_elapsed = now - rl->last_dropped; */
+    /*     rl->n_dropped = 0; */
+    /*     ovs_mutex_unlock(&rl->mutex); */
 
-        vlog(module, level,
-             "Dropped %u log messages in last %u seconds (most recently, "
-             "%u seconds ago) due to excessive rate",
-             n_dropped, first_dropped_elapsed, last_dropped_elapsed);
-    }
+    /*     vlog(module, level, */
+    /*          "Dropped %u log messages in last %u seconds (most recently, " */
+    /*          "%u seconds ago) due to excessive rate", */
+    /*          n_dropped, first_dropped_elapsed, last_dropped_elapsed); */
+    /* } */
 
     return false;
 }

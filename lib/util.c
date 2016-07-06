@@ -29,18 +29,13 @@
 #include <unistd.h>
 #include "bitmap.h"
 #include "byte-order.h"
-#include "coverage.h"
 #include "ovs-rcu.h"
 #include "ovs-thread.h"
-#include "socket-util.h"
-#include "openvswitch/vlog.h"
+/* #include "socket-util.h" */
 #ifdef HAVE_PTHREAD_SET_NAME_NP
 #include <pthread_np.h>
 #endif
 
-VLOG_DEFINE_THIS_MODULE(util);
-
-COVERAGE_DEFINE(util_xalloc);
 
 /* argv[0] without directory names. */
 char *program_name;
@@ -69,8 +64,8 @@ ovs_assert_failure(const char *where, const char *function,
 
     switch (reentry++) {
     case 0:
-        VLOG_ABORT("%s: assertion %s failed in %s()",
-                   where, condition, function);
+        fprintf(stderr, "%s: assertion %s failed in %s()",
+		where, condition, function);
         OVS_NOT_REACHED();
 
     case 1:
@@ -93,7 +88,6 @@ void *
 xcalloc(size_t count, size_t size)
 {
     void *p = count && size ? calloc(count, size) : malloc(1);
-    COVERAGE_INC(util_xalloc);
     if (p == NULL) {
         out_of_memory();
     }
@@ -110,7 +104,6 @@ void *
 xmalloc(size_t size)
 {
     void *p = malloc(size ? size : 1);
-    COVERAGE_INC(util_xalloc);
     if (p == NULL) {
         out_of_memory();
     }
@@ -121,7 +114,6 @@ void *
 xrealloc(void *p, size_t size)
 {
     p = realloc(p, size ? size : 1);
-    COVERAGE_INC(util_xalloc);
     if (p == NULL) {
         out_of_memory();
     }
@@ -194,7 +186,6 @@ xmalloc_cacheline(size_t size)
     void *p;
     int error;
 
-    COVERAGE_INC(util_xalloc);
     error = posix_memalign(&p, CACHE_LINE_SIZE, size ? size : 1);
     if (error != 0) {
         out_of_memory();
@@ -843,7 +834,7 @@ get_cwd(void)
             int error = errno;
             free(buf);
             if (error != ERANGE) {
-                VLOG_WARN("getcwd failed (%s)", ovs_strerror(error));
+                fprintf(stderr, "getcwd failed (%s)", ovs_strerror(error));
                 return NULL;
             }
             size *= 2;
@@ -987,8 +978,8 @@ follow_symlinks(const char *filename)
 
         linkname = xreadlink(fn);
         if (!linkname) {
-            VLOG_WARN("%s: readlink failed (%s)",
-                      filename, ovs_strerror(errno));
+  	    fprintf(stderr, "%s: readlink failed (%s)",
+		    filename, ovs_strerror(errno));
             return fn;
         }
 
@@ -1014,7 +1005,7 @@ follow_symlinks(const char *filename)
         fn = next_fn;
     }
 
-    VLOG_WARN("%s: too many levels of symlinks", filename);
+    fprintf(stderr, "%s: too many levels of symlinks", filename);
     free(fn);
 #endif
     return xstrdup(filename);
@@ -2135,7 +2126,7 @@ OVS_CONSTRUCTOR(winsock_start) {
 
     error = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (error != 0) {
-        VLOG_FATAL("WSAStartup failed: %s", sock_strerror(sock_errno()));
+        fprintf(stderr, "WSAStartup failed: %s", sock_strerror(sock_errno()));
    }
 }
 #endif

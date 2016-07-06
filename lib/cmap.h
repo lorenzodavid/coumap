@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "ovs-rcu.h"
-#include "util.h"
 
 /* Concurrent hash map
  * ===================
