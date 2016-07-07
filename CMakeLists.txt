@@ -13,7 +13,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR})
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 # List of all subdirectories in coumap
-list(APPEND COUMAP_SUBDIRS lib)
+list(APPEND COUMAP_SUBDIRS lib tests)
 
 foreach(dir ${COUMAP_SUBDIRS})
   add_subdirectory(${dir})
@@ -22,4 +22,3 @@ foreach(dir ${COUMAP_SUBDIRS})
   list(APPEND CPPLINT_C_FILES ${C_FILES})
   list(APPEND CPPLINT_H_FILES ${H_FILES})
 endforeach()
-

@@ -27,6 +27,8 @@
 #include "simple_timeval.h"
 #include "util.h"
 
+#include "simple_timeval.h"
+
 /* This is the 32-bit PRNG recommended in G. Marsaglia, "Xorshift RNGs",
  * _Journal of Statistical Software_ 8:14 (July 2003).  According to the paper,
  * it has a period of 2**32 - 1 and passes almost all tests of randomness.
@@ -42,22 +44,6 @@
 DEFINE_STATIC_PER_THREAD_DATA(uint32_t, seed, 0);
 
 static uint32_t random_next(void);
-
-void
-xgettimeofday(struct timeval *tv)
-{
-#ifndef _WIN32
-    if (gettimeofday(tv, NULL) == -1) {
-        fprintf(stderr, "gettimeofday failed (%s)", ovs_strerror(errno));
-    }
-#else
-    ULARGE_INTEGER current_time = xgetfiletime();
-
-    tv->tv_sec = (current_time.QuadPart - unix_epoch) / 10000000;
-    tv->tv_usec = ((current_time.QuadPart - unix_epoch) %
-                   10000000) / 10;
-#endif
-}
 
 void
 random_init(void)
