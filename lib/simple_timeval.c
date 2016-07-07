@@ -117,6 +117,22 @@ timeval_to_msec(const struct timeval *tv)
 }
 
 void
+xgettimeofday(struct timeval *tv)
+{
+  #ifndef _WIN32
+  if (gettimeofday(tv, NULL) == -1) {
+    fprintf(stderr, "gettimeofday failed (%s)", ovs_strerror(errno));
+  }
+  #else
+  ULARGE_INTEGER current_time = xgetfiletime();
+
+  tv->tv_sec = (current_time.QuadPart - unix_epoch) / 10000000;
+  tv->tv_usec = ((current_time.QuadPart - unix_epoch) %
+		 10000000) / 10;
+  #endif
+}
+
+void
 xclock_gettime(clock_t id, struct timespec *ts)
 {
     if (clock_gettime(id, ts) == -1) {
