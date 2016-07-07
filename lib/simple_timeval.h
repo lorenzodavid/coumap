@@ -30,6 +30,9 @@ struct pollfd;
 struct timespec;
 struct timeval;
 
+
+long long int timespec_to_msec(const struct timespec *ts);
+long long int timeval_to_msec(const struct timeval *tv);
 int time_poll(struct pollfd *, int, HANDLE *handles OVS_UNUSED, long long int, int *);
 void timewarp_run(void);
 long long int timespec_to_msec(const struct timespec *ts);
