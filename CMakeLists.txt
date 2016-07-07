@@ -15,6 +15,8 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR})
 # List of all subdirectories in coumap
 list(APPEND COUMAP_SUBDIRS lib tests)
 
+add_definitions(-Werror)
+
 foreach(dir ${COUMAP_SUBDIRS})
   add_subdirectory(${dir})
   file(GLOB_RECURSE C_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${dir}/*.c)

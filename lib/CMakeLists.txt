@@ -6,7 +6,6 @@ target_link_libraries(coumap pthread rt ssl)
 
 add_library(hash hash.c)
 
-add_subdirectory(test)
 add_subdirectory(openvswitch)
 
 FILE(GLOB HEADERFILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.h)
