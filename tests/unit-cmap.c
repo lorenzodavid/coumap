@@ -26,7 +26,7 @@ typedef struct my_node {
   int data;
 } my_node;
 
-int main() {
+int main(int argc, char **argv) {
   struct cmap cmap;
   struct my_node my_node;
   struct my_node my_node_2;
