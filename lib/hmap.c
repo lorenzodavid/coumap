@@ -104,7 +104,7 @@ resize(struct hmap *hmap, size_t new_mask, const char *where)
         }
         if (count > 5) {
 	    // hmap patological
-            fprintf(stderr, "%s: %d nodes in bucket (%"PRIuSIZE" nodes, %"PRIuSIZE" buckets)",
+            fprintf(stderr, "%s: %d nodes in bucket (%"PRIuSIZE" nodes, %"PRIuSIZE" buckets)\n",
 		    where, count, hmap->n, hmap->mask + 1);
         }
     }
